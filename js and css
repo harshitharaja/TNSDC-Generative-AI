@@ -1,0 +1,169 @@
+// In history.js
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/history')
+        .then(response => response.json())
+        .then(data => displayHistory(data))
+        .catch(error => console.error('Error fetching history:', error));
+});
+
+function displayHistory(data) {
+    const historyTableContainer = document.getElementById('historyTableContainer');
+    const historyTable = document.createElement('table');
+
+    // Generate the table content based on the history data
+    // Similar to the logic used for generating the table in index.html
+
+    historyTableContainer.appendChild(historyTable);
+}
+
+function uploadResume() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    let width = 1; // Start at 1% to show progress immediately
+    const interval = setInterval(frame, 30);
+
+    function frame() {
+        if (width >= 99) {
+            clearInterval(interval);
+            width = 100; // Ensure the progress bar reaches 100%
+            progressBar.style.width = width + '%';
+            progressText.innerHTML = 'Almost there...'; // Update text just before completion
+            setTimeout(() => initiateFetch(formData), 300); // Wait 300ms before initiating fetch
+        } else {
+            width++;
+            progressBar.style.width = width + '%';
+        }
+    }
+
+    function initiateFetch(formData) {
+        // Display a loading indicator while waiting for the response
+        progressText.innerHTML = 'Loading...';
+
+        fetch('/analyze', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            clearInterval(interval); // Stop the progress bar when the response is received
+            progressBar.style.width = '100%'; // Ensure the progress bar reaches 100% on completion
+            progressText.innerHTML = 'Data processed'; // Update text upon completion
+            return response.text();
+        })
+        .then(data => {
+            // Update the result section with the extracted data
+            document.getElementById('result').innerHTML = data;
+        })
+        .catch(error => {
+            // Display an error message in case of failure
+            progressText.innerHTML = 'An error occurred. Please try again.';
+            console.error('Error:', error);
+            clearInterval(interval); // Stop the progress bar in case of an error
+        });
+    }
+}
+
+/* styles.css */
+
+/* Global Styles */
+body {
+    font-family: 'Times New Roman', serif; /* Changed font family */
+    margin: 0;
+    padding: 20px; /* Added padding */
+    background-color: #e0e0e0; /* Changed background color */
+    color: #000; /* Changed text color */
+}
+
+h1 {
+    font-size: 28px;
+}
+
+p {
+    font-size: 18px; /* Increased paragraph font size */
+}
+
+/* Purple Button Color */
+input[type="button"],
+input[type="submit"] {
+    padding: 10px 20px;
+    background-color: #6a0dad;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    animation: pulse 0.5s infinite; /* Added animation */
+}
+
+/* Hover Effects for Buttons */
+input[type="button"]:hover,
+input[type="submit"]:hover {
+    background-color: #5a038c;
+}
+
+/* Focus Effects for Buttons */
+input[type="button"]:focus,
+input[type="submit"]:focus {
+    outline: none;
+    box-shadow: 0 0 5px #6a0dad; /* Added focus styles */
+}
+
+/* Progress Bar Color */
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #4CAF50;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Loading Animation */
+.progress-bar::after {
+    content: 'Processing your data';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-weight: bold;
+    animation: loading 2s infinite;
+}
+
+/* Keyframes for animations */
+@keyframes loading {
+    0% {
+        width: 0%;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    body {
+        font-size: 14px; /* Decreased font size for smaller screens */
+    }
+}
+
+/* Image Styles */
+.img-rounded {
+    border-radius: 5px; /* Added image styles */
+}
